@@ -35,14 +35,12 @@ RUN apk add --no-cache \
     		git \
     		g++ \
     		cmake \
-    		sudo \
     	&& apk add --no-cache --virtual .gettext gettext
 
 # Add groups and users
 RUN addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx
 RUN addgroup -g $APPLICATION_GID $APPLICATION_GROUP \
-    && echo '%application ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/application \
     && adduser -D -u $APPLICATION_UID -s /bin/bash -G $APPLICATION_GROUP $APPLICATION_USER
 
 RUN mkdir -p /usr/src \
@@ -105,7 +103,6 @@ RUN cd /usr/src \
             --with-stream_realip_module \
             --with-http_slice_module \
             --with-http_v2_module \
-            --with-debug \
             --add-dynamic-module=/usr/src/ngx_brotli \
     " \
     && ./configure $CONFIG \
@@ -142,56 +139,23 @@ RUN apk update && apk add --no-cache supervisor openssh libwebp-tools sshpass jp
 STOPSIGNAL SIGQUIT
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
-    &&  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer2 --version=2.0.0-alpha2
+    &&  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer2 --version=2.0.0-alpha3
 
 USER application
 
 RUN curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-completion.bash > /home/application/.git-completion.bash \
     && curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /home/application/.git-prompt.sh
-RUN composer global require hirak/prestissimo davidrjonas/composer-lock-diff perftools/php-profiler && \
+RUN composer global require hirak/prestissimo davidrjonas/composer-lock-diff && \
     composer clear
 COPY user/* /home/application/
 RUN echo "source ~/bashconfig.sh" >> ~/.bashrc
 
 USER root
-COPY user/* /root/
 RUN mkdir -p /opt/php-libs
 COPY php/* /opt/php-libs/files/
 
 # activate opcache and jit
 RUN mv /opt/php-libs/files/opcache-jit.ini /usr/local/etc/php/conf.d/docker-php-opcache-jit.ini
-
-# install pcov
-RUN cd /opt/php-libs \
-    && git clone https://github.com/krakjoe/pcov.git \
-    && cd pcov \
-    && phpize \
-    && ./configure --enable-pcov \
-    && make \
-    && make install \
-    && docker-php-ext-enable pcov \
-    && mv /opt/php-libs/files/pcov.ini /usr/local/etc/php/conf.d/docker-php-pcov.ini
-
-# install xdebug 3.0
-RUN cd /opt/php-libs \
-    && git clone https://github.com/xdebug/xdebug \
-    && cd xdebug \
-    # the last working commit, because the php-src is not up to date yet in this alpine
-    && phpize \
-    && ./configure --enable-xdebug-dev \
-    && make all \
-    && mv /opt/php-libs/files/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
-# install tideways
-RUN cd /opt/php-libs \
-     && git clone https://github.com/tideways/php-xhprof-extension \
-     && cd php-xhprof-extension \
-     && phpize \
-     && ./configure \
-     && make \
-     && make install \
-     && mkdir -p /opt/docker/profiler \
-     && mv /opt/php-libs/files/xhprof.ini /usr/local/etc/php/conf.d/docker-php-ext-xhprof.ini
 
 RUN curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-completion.bash > /root/.git-completion.bash \
     && curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /root/.git-prompt.sh

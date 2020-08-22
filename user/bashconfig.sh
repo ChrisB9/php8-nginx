@@ -3,7 +3,6 @@ export PATH=$PATH:~/.composer/vendor/bin:./bin:./vendor/bin:./node_modules/.bin
 source ~/.git-completion.bash
 source ~/.git-prompt.sh
 
-# only enable docker aliases if docker-socket is mounted
 CONTAINER_ID=$(basename $(cat /proc/1/cpuset))
 export HOST_DISPLAY_NAME=$HOSTNAME
 
