@@ -159,7 +159,7 @@ RUN mv /opt/php-libs/files/opcache-jit.ini /usr/local/etc/php/conf.d/docker-php-
 
 RUN curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-completion.bash > /root/.git-completion.bash \
     && curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /root/.git-prompt.sh
-
+RUN mkdir -p /var/log/supervisord
 EXPOSE 80 443 9000
 CMD ["/usr/bin/supervisord", "-c", "/opt/docker/supervisord.conf"]
 
