@@ -6,8 +6,9 @@ on:
       - main
     tags:
       - v*
+      - beta-*
 env:
-  IMAGE_NAME: php8-nginx-xdebug
+  IMAGE_NAME: php8-nginx
 
 jobs:
   push:
