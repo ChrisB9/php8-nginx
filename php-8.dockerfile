@@ -1,4 +1,4 @@
-FROM php:8.0.0beta4-fpm-alpine
+FROM php:8.0.0RC2-fpm-alpine
 
 ENV TERM="xterm" \
     LANG="C.UTF-8" \
@@ -142,8 +142,7 @@ RUN go get github.com/Kagami/go-avif \
 
 STOPSIGNAL SIGQUIT
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
-    &&  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer2 --version=2.0.0-alpha3
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
 USER application
 
@@ -155,6 +154,7 @@ COPY user/* /home/application/
 RUN echo "source ~/bashconfig.sh" >> ~/.bashrc
 
 USER root
+COPY user/* /root/
 RUN mkdir -p /opt/php-libs
 COPY php/* /opt/php-libs/files/
 
