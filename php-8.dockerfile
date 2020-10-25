@@ -148,8 +148,6 @@ USER application
 
 RUN curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-completion.bash > /home/application/.git-completion.bash \
     && curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /home/application/.git-prompt.sh
-RUN composer global require hirak/prestissimo davidrjonas/composer-lock-diff && \
-    composer clear
 COPY user/* /home/application/
 RUN echo "source ~/bashconfig.sh" >> ~/.bashrc
 
