@@ -1,4 +1,4 @@
-FROM php:8.0.0beta2-fpm-alpine
+FROM php:8.0.0RC2-fpm-alpine
 
 ENV TERM="xterm" \
     LANG="C.UTF-8" \
@@ -134,12 +134,15 @@ RUN mkdir -p /etc/nginx/modules-enabled/ \
     && touch /app/index.html \
     && echo "<h1>It Works!</h1>" >> /app/index.html
 
-RUN apk update && apk add --no-cache supervisor openssh libwebp-tools sshpass jpegoptim optipng pngquant git wget vim nano less tree bash-completion mariadb-client
+RUN apk update && apk add --no-cache supervisor openssh libwebp-tools sshpass go aom-dev imagemagick jpegoptim optipng pngquant git wget vim nano less tree bash-completion mariadb-client
+RUN go get github.com/Kagami/go-avif \
+    && cd /root/go/src/github.com/Kagami/go-avif \
+    && make all \
+    && mv /root/go/bin/avif /usr/local/bin/avif
 
 STOPSIGNAL SIGQUIT
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
-    &&  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer2 --version=2.0.0-alpha3
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
 USER application
 
@@ -151,6 +154,7 @@ COPY user/* /home/application/
 RUN echo "source ~/bashconfig.sh" >> ~/.bashrc
 
 USER root
+COPY user/* /root/
 RUN mkdir -p /opt/php-libs
 COPY php/* /opt/php-libs/files/
 
@@ -159,8 +163,8 @@ RUN mv /opt/php-libs/files/opcache-jit.ini /usr/local/etc/php/conf.d/docker-php-
 
 RUN curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-completion.bash > /root/.git-completion.bash \
     && curl https://raw.githubusercontent.com/git/git/v$(git --version | awk 'NF>1{print $NF}')/contrib/completion/git-prompt.sh > /root/.git-prompt.sh
-
+RUN mkdir -p /var/log/supervisord
 EXPOSE 80 443 9000
-CMD ["/usr/bin/supervisord", "-c", "/opt/docker/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-nc", "/opt/docker/supervisord.conf"]
 
 WORKDIR /app
